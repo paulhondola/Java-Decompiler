@@ -41,8 +41,7 @@ class TextDisplay{
 
 class MainDriver{
  main()
- }
-
+}
 
 Subject <|--- TemperatureSensor
 
@@ -53,6 +52,5 @@ Observer <|--- AverageDisplay
 Observer <|--- NumericDisplay
 
 Observer <|--- TextDisplay
-
 
 @enduml

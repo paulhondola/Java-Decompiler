@@ -1,5 +1,5 @@
 [Event||]
-[EventService|- eventClass:Class of ?;# subscriptions:List of Subscription;- singleton:EventService|subscribe();unsubscribe();instance();publish()]
+[EventService|- eventClass:Class of ?;# subscriptions:List of Subscription;- singleton:EventService|instance();publish();subscribe();unsubscribe()]
 [EventService]->[Subscription]
 [EventService]->[EventService]
 [Filter||apply()]

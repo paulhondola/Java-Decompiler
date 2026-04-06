@@ -3,8 +3,8 @@
 class AverageDisplay{
   -sum:float
   -count:int
-  update()
   display()
+  update()
 }
 
 class MainDriver{
@@ -13,8 +13,8 @@ class MainDriver{
 
 class NumericDisplay{
   -value:int
-  update()
   display()
+  update()
 }
 
 interface Observer{
@@ -22,25 +22,25 @@ interface Observer{
 }
 
 interface Subject{
-  notifyObservers()
   attach()
   detach()
+  notifyObservers()
 }
 
 class TemperatureSensor{
   -observers:ArrayList of Observer
   -tempState:int
-  setTemp()
-  notifyObservers()
-  getTemp()
   attach()
   detach()
+  getTemp()
+  notifyObservers()
+  setTemp()
 }
 
 class TextDisplay{
   -value:int
-  update()
   display()
+  update()
 }
 
 Observer <|--- AverageDisplay

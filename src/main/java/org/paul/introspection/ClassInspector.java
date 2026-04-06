@@ -44,6 +44,8 @@ public class ClassInspector {
             methodNames.add(method.getName() + "()");
         }
 
+        Collections.sort(methodNames);
+
         List<Relationship> relationships = new ArrayList<>();
 
         // 1. Associations (from fields) — order follows getDeclaredFields()

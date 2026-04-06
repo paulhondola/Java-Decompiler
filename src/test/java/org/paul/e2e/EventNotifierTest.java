@@ -2,6 +2,7 @@ package org.paul.e2e;
 
 import org.junit.jupiter.api.Test;
 import org.paul.Main;
+import org.paul.config.DecompileConfig;
 import org.paul.formatter.YumlFormatter;
 
 import java.io.IOException;
@@ -16,15 +17,15 @@ public class EventNotifierTest {
 
     @Test
     void testSimpleYuml() throws IOException {
-        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-simple-yuml.txt"));
-        String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.SIMPLE));
+        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-simple.yuml"));
+        String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.SIMPLE), DecompileConfig.defaults());
         assertEquals(expected, actual);
     }
 
     @Test
     void testClassesYuml() throws IOException {
-        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-classes-yuml.txt"));
-        String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.CLASSES));
+        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-classes.yuml"));
+        String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.CLASSES), DecompileConfig.defaults());
         assertEquals(expected, actual);
     }
 }

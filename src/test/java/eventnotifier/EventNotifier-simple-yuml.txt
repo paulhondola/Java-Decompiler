@@ -1,7 +1,7 @@
 [Event]
 [EventService]
-[EventService]->[EventService]
 [EventService]->[Subscription]
+[EventService]->[EventService]
 [Filter]
 [InvalidEventTypeException]
 [Subscriber]

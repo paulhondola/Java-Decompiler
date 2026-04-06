@@ -16,14 +16,14 @@ public class EventNotifierTest {
 
     @Test
     void testSimpleYuml() throws IOException {
-        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/input/EventNotifier-simple-yuml.txt"));
+        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-simple-yuml.txt"));
         String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.SIMPLE));
         assertEquals(expected, actual);
     }
 
     @Test
     void testClassesYuml() throws IOException {
-        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/input/EventNotifier-classes-yuml.txt"));
+        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-classes-yuml.txt"));
         String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.CLASSES));
         assertEquals(expected, actual);
     }

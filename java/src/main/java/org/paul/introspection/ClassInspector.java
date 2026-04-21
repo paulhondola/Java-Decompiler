@@ -28,7 +28,18 @@ public class ClassInspector {
         // LinkedHashSet preserves first-seen order and deduplicates
         LinkedHashSet<String> associationTargets = new LinkedHashSet<>();
 
-        for (Field field : clazz.getDeclaredFields()) {
+        // getDeclaredFields() / getDeclaredMethods() trigger resolution of method/field
+        // descriptors. If the JAR has external dependencies that are not
+        // on the classpath, the JVM throws NoClassDefFoundError here — not during loadClass().
+        // We catch and skip gracefully so the class still appears in the diagram.
+        Field[] declaredFields;
+        try {
+            declaredFields = clazz.getDeclaredFields();
+        } catch (NoClassDefFoundError ignored) {
+            declaredFields = new Field[0];
+        }
+
+        for (Field field : declaredFields) {
             if (field.isSynthetic()) continue;
 
             char accessMod = accessModChar(field.getModifiers());
@@ -38,8 +49,15 @@ public class ClassInspector {
             collectTargets(field.getGenericType(), loadedClassNames, config, associationTargets);
         }
 
+        Method[] declaredMethods;
+        try {
+            declaredMethods = clazz.getDeclaredMethods();
+        } catch (NoClassDefFoundError ignored) {
+            declaredMethods = new Method[0];
+        }
+
         List<String> methodNames = new ArrayList<>();
-        for (Method method : clazz.getDeclaredMethods()) {
+        for (Method method : declaredMethods) {
             if (method.isSynthetic() || method.isBridge()) continue;
             methodNames.add(method.getName() + "()");
         }
@@ -54,7 +72,12 @@ public class ClassInspector {
         }
 
         // 2. Extends (superclass, if in loaded set and not Object)
-        Class<?> superclass = clazz.getSuperclass();
+        Class<?> superclass;
+        try {
+            superclass = clazz.getSuperclass();
+        } catch (NoClassDefFoundError ignored) {
+            superclass = null;
+        }
         if (superclass != null && !superclass.equals(Object.class)) {
             String targetName = classDisplayName(superclass, config);
             if (loadedClassNames.contains(targetName)) {
@@ -63,7 +86,13 @@ public class ClassInspector {
         }
 
         // 3. Implements (interfaces, if in loaded set)
-        for (Class<?> iface : clazz.getInterfaces()) {
+        Class<?>[] ifaces;
+        try {
+            ifaces = clazz.getInterfaces();
+        } catch (NoClassDefFoundError ignored) {
+            ifaces = new Class<?>[0];
+        }
+        for (Class<?> iface : ifaces) {
             String targetName = classDisplayName(iface, config);
             if (loadedClassNames.contains(targetName)) {
                 relationships.add(new Relationship.Implements(targetName));

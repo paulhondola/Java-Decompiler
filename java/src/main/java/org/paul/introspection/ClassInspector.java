@@ -5,8 +5,20 @@ import org.paul.model.ClassInfo;
 import org.paul.model.FieldInfo;
 import org.paul.model.Relationship;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Extracts a {@link ClassInfo} from a single {@link Class} using {@code java.lang.reflect}.
@@ -40,7 +52,9 @@ public class ClassInspector {
         }
 
         for (Field field : declaredFields) {
-            if (field.isSynthetic()) continue;
+            if (field.isSynthetic()) {
+                continue;
+            }
 
             char accessMod = accessModChar(field.getModifiers());
             String typeName = getTypeName(field.getGenericType(), config);
@@ -58,7 +72,9 @@ public class ClassInspector {
 
         List<String> methodNames = new ArrayList<>();
         for (Method method : declaredMethods) {
-            if (method.isSynthetic() || method.isBridge()) continue;
+            if (method.isSynthetic() || method.isBridge()) {
+                continue;
+            }
             methodNames.add(method.getName() + "()");
         }
 
@@ -110,9 +126,15 @@ public class ClassInspector {
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static char accessModChar(int modifiers) {
-        if (Modifier.isPublic(modifiers)) return '+';
-        if (Modifier.isProtected(modifiers)) return '#';
-        if (Modifier.isPrivate(modifiers)) return '-';
+        if (Modifier.isPublic(modifiers)) {
+            return '+';
+        }
+        if (Modifier.isProtected(modifiers)) {
+            return '#';
+        }
+        if (Modifier.isPrivate(modifiers)) {
+            return '-';
+        }
         return '~';
     }
 
@@ -138,7 +160,9 @@ public class ClassInspector {
                 yield rawName + " of " + args;
             }
             case Class<?> c -> {
-                if (c.isArray()) yield getTypeName(c.getComponentType(), config) + "[]";
+                if (c.isArray()) {
+                    yield getTypeName(c.getComponentType(), config) + "[]";
+                }
                 yield classDisplayName(c, config);
             }
             case WildcardType ignored -> "?";
@@ -168,7 +192,9 @@ public class ClassInspector {
             case ParameterizedType pt -> {
                 // Raw type might itself be a loaded class
                 String rawName = classDisplayName((Class<?>) pt.getRawType(), config);
-                if (loadedClassNames.contains(rawName)) targets.add(rawName);
+                if (loadedClassNames.contains(rawName)) {
+                    targets.add(rawName);
+                }
                 // Recurse into type arguments
                 for (Type arg : pt.getActualTypeArguments()) {
                     collectTargets(arg, loadedClassNames, config, targets);
@@ -177,7 +203,9 @@ public class ClassInspector {
             case Class<?> c -> {
                 if (!c.isPrimitive() && !c.isArray()) {
                     String name = classDisplayName(c, config);
-                    if (loadedClassNames.contains(name)) targets.add(name);
+                    if (loadedClassNames.contains(name)) {
+                        targets.add(name);
+                    }
                 }
             }
             case WildcardType wt -> {

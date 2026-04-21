@@ -11,7 +11,9 @@ import java.util.List;
 public class ClassFilter {
 
     public static List<Class<?>> filter(List<Class<?>> classes, DecompileConfig config) {
-        if (config.ignorePatterns().isEmpty()) return classes;
+        if (config.ignorePatterns().isEmpty()) {
+            return classes;
+        }
 
         return classes.stream()
                 .filter(c -> !isIgnored(c, config))
@@ -23,9 +25,13 @@ public class ClassFilter {
         for (String pattern : config.ignorePatterns()) {
             if (pattern.endsWith(".*")) {
                 String pkg = pattern.substring(0, pattern.length() - 2);
-                if (fqn.startsWith(pkg + ".") || fqn.equals(pkg)) return true;
+                if (fqn.startsWith(pkg + ".") || fqn.equals(pkg)) {
+                    return true;
+                }
             } else {
-                if (fqn.equals(pattern)) return true;
+                if (fqn.equals(pattern)) {
+                    return true;
+                }
             }
         }
         return false;

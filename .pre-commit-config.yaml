@@ -1,0 +1,28 @@
+repos:
+  # ── Python ────────────────────────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.11
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  # ── C# ────────────────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: dotnet-format
+        name: dotnet format (C#)
+        language: system
+        entry: dotnet format csharp/CSharpDecompiler/CSharpDecompiler.csproj
+        files: \.cs$
+        pass_filenames: false
+
+  # ── Java ─────────────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: checkstyle
+        name: checkstyle (Java)
+        language: system
+        entry: mvn -f java/pom.xml -q checkstyle:check
+        files: \.java$
+        pass_filenames: false

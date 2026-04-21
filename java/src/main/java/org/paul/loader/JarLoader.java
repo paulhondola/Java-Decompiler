@@ -25,10 +25,14 @@ public class JarLoader {
 
             for (JarEntry entry : Collections.list(jar.entries())) {
                 String name = entry.getName();
-                if (!name.endsWith(".class")) continue;
+                if (!name.endsWith(".class")) {
+                    continue;
+                }
 
                 // Skip anonymous / inner classes (compiler-generated $N names)
-                if (name.contains("$")) continue;
+                if (name.contains("$")) {
+                    continue;
+                }
 
                 String className = name.replace('/', '.').replace(".class", "");
 

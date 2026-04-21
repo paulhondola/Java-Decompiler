@@ -1,8 +1,21 @@
+### Java / Maven ###
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin
+
+### Python / uv ###
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+
+### C# / dotnet ###
+csharp/**/bin/
+csharp/**/obj/
+dotnet-tools.json
 
 ### IntelliJ IDEA ###
 .idea/

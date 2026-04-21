@@ -1,14 +1,101 @@
-# Java Decompiler
+# ArchLens
 
-A command-line tool that uses Java reflection to introspect compiled `.jar` files and generate UML class diagrams. Supports **yUML** and **PlantUML** output formats.
+A monorepo with a **Python CLI** that generates UML class diagrams from compiled binaries. Pass a `.jar` (Java) or `.dll` (C#) file and get PlantUML or yUML output.
+
+| Language | Input  | Status      |
+| -------- | ------ | ----------- |
+| Java     | `.jar` | Implemented |
+| C#       | `.dll` | Coming soon |
 
 ---
 
-## How It Works
+## Repository Structure
 
-The tool runs a strict, layered pipeline:
-
+```text
+.
+├── pyproject.toml          # Python project root (uv + setuptools)
+├── archlens/               # Python orchestrator package
+│   ├── cli.py              # Entry point: decompile command
+│   ├── router.py           # Routes .jar → Java adapter, .dll → C# adapter
+│   ├── config.py           # DecompileConfig dataclass
+│   ├── build.py            # Entry points: build-java, build-csharp, build-all
+│   └── adapters/
+│       ├── java_adapter.py     # Invokes the Java fat JAR via subprocess
+│       └── csharp_adapter.py   # Stub — raises NotImplementedError
+├── tests/                  # Python test suite (pytest)
+├── java/                   # Java decompiler (Maven + picocli)
+│   ├── pom.xml
+│   └── src/
+└── csharp/                 # C# decompiler stub (dotnet classlib)
+    └── CSharpDecompiler/
 ```
+
+---
+
+## Quick Start
+
+Requires Python 3.11+, Java 25+, Maven, and [uv](https://docs.astral.sh/uv/).
+
+```bash
+# Install Python dependencies
+uv sync
+
+# Build the Java fat JAR
+uv run build-java
+
+# Run
+uv run decompile MyLib.jar --format plantuml
+```
+
+---
+
+## Python CLI
+
+```text
+Usage: decompile [-h] --format {plantuml,yuml} [--ignore PATTERN]
+                 [--output FILE] [--yuml-mode {SIMPLE,CLASSES}]
+                 FILE
+
+  FILE                  .jar or .dll file to analyse
+  --format              Output format: plantuml, yuml  [required]
+  --ignore PATTERN      Class name pattern to exclude (repeatable)
+  --output FILE         Write output to FILE instead of stdout
+  --yuml-mode MODE      yUML rendering mode: SIMPLE, CLASSES  [default: SIMPLE]
+```
+
+### Examples
+
+```bash
+# PlantUML to stdout
+uv run decompile MyLib.jar --format plantuml
+
+# yUML with full member details, written to a file
+uv run decompile MyLib.jar --format yuml --yuml-mode CLASSES --output diagram.yuml
+
+# Ignore packages
+uv run decompile MyLib.jar --format plantuml \
+  --ignore "java.lang.*" --ignore "java.util.*"
+```
+
+---
+
+## Build Commands
+
+```bash
+uv run build-java    # mvn -f java/pom.xml package -DskipTests
+uv run build-csharp  # dotnet build csharp/CSharpDecompiler
+uv run build-all     # both in sequence, stops on first failure
+```
+
+---
+
+## Java Decompiler
+
+### How It Works
+
+The Java adapter passes the input JAR directly to the fat JAR CLI tool, which runs a layered reflection pipeline:
+
+```text
 JAR file
    │
    ▼
@@ -30,7 +117,7 @@ stdout / file
 Relationships are discovered entirely through reflection:
 
 | Relationship  | Source                                          |
-|---------------|-------------------------------------------------|
+| ------------- | ----------------------------------------------- |
 | `extends`     | `clazz.getSuperclass()`                         |
 | `implements`  | `clazz.getInterfaces()`                         |
 | `association` | Field types (including generic type parameters) |
@@ -38,13 +125,11 @@ Relationships are discovered entirely through reflection:
 
 > Aggregation and composition cannot be distinguished via reflection — both are reported as `association`. Cardinality is not included.
 
----
+### Java Package Structure
 
-## Package Structure
-
-```
+```text
 org.paul/
-├── Main.java                  # CLI entry point — orchestrates the pipeline
+├── Main.java                  # CLI entry point
 ├── config/
 │   └── DecompileConfig.java   # Immutable config record
 ├── loader/
@@ -54,7 +139,7 @@ org.paul/
 │   ├── Relationship.java      # Sealed type: Extends | Implements | Association | Dependency
 │   └── FieldInfo.java         # Field name, type string, access modifier char
 ├── introspection/
-│   └── ClassInspector.java    # Extracts ClassInfo from a Class<?> using reflect
+│   └── ClassInspector.java    # Extracts ClassInfo from a Class<?> via reflection
 ├── filter/
 │   └── ClassFilter.java       # Applies ignore patterns before introspection
 └── formatter/
@@ -63,98 +148,49 @@ org.paul/
     └── PlantUmlFormatter.java # PlantUML output
 ```
 
----
+### Invoking the Java CLI Directly
 
-## Build
-
-Requires Java 25+ and Maven.
+The fat JAR can also be used standalone:
 
 ```bash
-mvn package
+java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar --format plantuml
+java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar \
+  --format yuml --yuml-mode CLASSES --output diagram.yuml
+java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar \
+  --format plantuml --ignore "java.lang.*,java.util.*"
 ```
 
-Produces a self-contained fat JAR at `target/Java-Decompiler-1.0-SNAPSHOT.jar` with all dependencies bundled (including picocli).
-
-To build and skip tests:
+### Java Tests
 
 ```bash
-mvn package -DskipTests
+cd java && mvn test
 ```
 
----
+Tests cover each layer independently and validate end-to-end output against fixture files:
 
-## Usage
+| Fixture          | Contents                                |
+| ---------------- | --------------------------------------- |
+| `tempsensor/`    | TempSensor.jar — yUML and PlantUML      |
+| `eventnotifier/` | EventNotifier.jar — yUML simple/classes |
+| `selftest/`      | Tool analysing itself                   |
 
-```
-Usage: java-decompiler [-hV] --format=<format> [--ignore=PATTERN[,PATTERN...]]
-                       [--output=FILE] [--yuml-mode=MODE] JAR
-
-      JAR                 Path to the JAR file to analyse.
-      --format=<format>   Output format: yuml, plantuml.
-      --ignore=PATTERN    Class name patterns to exclude, comma-separated or
-                            repeated (e.g. 'java.lang.*').
-      --output=FILE       Write output to FILE instead of stdout.
-      --yuml-mode=MODE    yUML rendering mode (only with --format yuml):
-                            SIMPLE, CLASSES. Default: SIMPLE.
-  -h, --help              Show this help message and exit.
-  -V, --version           Print version information and exit.
-```
-
-### Examples
+**Self-test** — regenerate the selftest fixtures:
 
 ```bash
-# PlantUML diagram to stdout
-java -jar target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar --format plantuml
-
-# yUML with full member details, written to a file
-java -jar target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar --format yuml --yuml-mode CLASSES --output diagram.yuml
-
-# Ignore multiple packages
-java -jar target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar --format plantuml \
-  --ignore "java.lang.*" --ignore "java.util.*"
-
-# Same using comma-separated form
-java -jar target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar --format plantuml \
-  --ignore "java.lang.*,java.util.*"
+java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar \
+  java/target/Java-Decompiler-1.0-SNAPSHOT.jar \
+  --format plantuml \
+  --output "java/src/test/java/selftest/selftest.puml" \
+  --ignore "picocli.*"
 ```
 
 ---
 
 ## Output Formats
 
-### yUML — SIMPLE mode
-
-One line per class, one line per relationship. No member details.
-
-```
-[ClassName]
-[Interface]^-.-[Implementor]
-[Parent]^-[Child]
-[Owner]->[Target]
-```
-
-### yUML — CLASSES mode
-
-Same relationships, with fields and methods embedded in the class node:
-
-```
-[ClassName|- field:Type|+ method()]
-```
-
-Access modifier symbols:
-
-| Java modifier  | Symbol |
-|----------------|--------|
-| `private`      | `-`    |
-| `protected`    | `#`    |
-| `public`       | `+`    |
-| package-private| `~`    |
-
-Parameterized types render as `ArrayList of Observer`.
-
 ### PlantUML
 
-```
+```plantuml
 @startuml
 
 interface InterfaceName{
@@ -172,41 +208,42 @@ Owner ---> Target
 @enduml
 ```
 
----
+### yUML — SIMPLE mode
 
-## Running Tests
-
-```bash
-mvn test
+```text
+[ClassName]
+[Interface]^-.-[Implementor]
+[Parent]^-[Child]
+[Owner]->[Target]
 ```
 
-Tests cover each layer independently (unit) and validate end-to-end output against fixture files in `src/test/java/`:
+### yUML — CLASSES mode
 
-| Fixture directory    | Contents                              |
-|----------------------|---------------------------------------|
-| `tempsensor/`        | TempSensor.jar — yUML and PlantUML    |
-| `eventnotifier/`     | EventNotifier.jar — yUML simple/classes |
-| `selftest/`          | Tool analysing itself (see below)     |
+```text
+[ClassName|- field:Type|+ method()]
+```
+
+Access modifier symbols:
+
+| Java modifier   | Symbol |
+| --------------- | ------ |
+| `private`       | `-`    |
+| `protected`     | `#`    |
+| `public`        | `+`    |
+| package-private | `~`    |
+
+Parameterized types render as `ArrayList of Observer`.
 
 ---
 
-## Self-Test
-
-These three commands run the decompiler against its own fat JAR and write the results into the `selftest/` fixture directory. Picocli internals are excluded via `--ignore`.
+## Python Tests
 
 ```bash
-java -jar target/Java-Decompiler-1.0-SNAPSHOT.jar target/Java-Decompiler-1.0-SNAPSHOT.jar \
-  --format plantuml \
-  --output "src/test/java/selftest/selftest.puml" \
-  --ignore "picocli.*"
-
-java -jar target/Java-Decompiler-1.0-SNAPSHOT.jar target/Java-Decompiler-1.0-SNAPSHOT.jar \
-  --format yuml --yuml-mode SIMPLE \
-  --output "src/test/java/selftest/selftest-simple.yuml" \
-  --ignore "picocli.*"
-
-java -jar target/Java-Decompiler-1.0-SNAPSHOT.jar target/Java-Decompiler-1.0-SNAPSHOT.jar \
-  --format yuml --yuml-mode CLASSES \
-  --output "src/test/java/selftest/selftest-classes.yuml" \
-  --ignore "picocli.*"
+uv run pytest -v
 ```
+
+| Test file                | Coverage                                           |
+| ------------------------ | -------------------------------------------------- |
+| `test_router.py`         | Extension routing, case insensitivity              |
+| `test_java_adapter.py`   | PlantUML/yUML output, ignore patterns, missing JAR |
+| `test_csharp_adapter.py` | NotImplementedError for all configs                |

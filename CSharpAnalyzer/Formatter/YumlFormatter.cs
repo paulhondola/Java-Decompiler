@@ -1,7 +1,7 @@
-using CSharpDecompiler.Config;
-using CSharpDecompiler.Model;
+using CSharpAnalyzer.Config;
+using CSharpAnalyzer.Model;
 
-namespace CSharpDecompiler.Formatter;
+namespace CSharpAnalyzer.Formatter;
 
 public sealed class YumlFormatter : IUmlFormatter
 {

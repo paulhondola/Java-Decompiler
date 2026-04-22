@@ -13,7 +13,7 @@ repos:
       - id: dotnet-format
         name: dotnet format (C#)
         language: system
-        entry: dotnet format csharp/CSharpDecompiler/CSharpDecompiler.csproj
+        entry: dotnet format CSharpAnalyzer/CSharpAnalyzer.csproj
         files: \.cs$
         pass_filenames: false
 
@@ -23,6 +23,6 @@ repos:
       - id: checkstyle
         name: checkstyle (Java)
         language: system
-        entry: mvn -f java/pom.xml -q checkstyle:check
+        entry: mvn -f JavaAnalyzer/pom.xml -q checkstyle:check
         files: \.java$
         pass_filenames: false

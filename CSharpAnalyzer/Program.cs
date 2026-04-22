@@ -1,10 +1,10 @@
-using CSharpDecompiler.Config;
-using CSharpDecompiler.Filter;
-using CSharpDecompiler.Formatter;
-using CSharpDecompiler.Introspection;
-using CSharpDecompiler.Loader;
+using CSharpAnalyzer.Config;
+using CSharpAnalyzer.Filter;
+using CSharpAnalyzer.Formatter;
+using CSharpAnalyzer.Introspection;
+using CSharpAnalyzer.Loader;
 
-namespace CSharpDecompiler;
+namespace CSharpAnalyzer;
 
 internal static class Program
 {
@@ -31,5 +31,4 @@ internal static class Program
             config
         );
     }
-
 }

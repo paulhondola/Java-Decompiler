@@ -1,24 +1,14 @@
-### Java / Maven ###
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin
 
-### Python / uv ###
-.venv/
-__pycache__/
-*.py[cod]
-*.egg-info/
-dist/
-
-### C# / dotnet ###
-CSharpAnalyzer/bin/
-CSharpAnalyzer/obj/
-dotnet-tools.json
-
 ### IntelliJ IDEA ###
-.idea/
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
 *.iws
 *.iml
 *.ipr
@@ -42,16 +32,8 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# AI Agents
-.claude/
-CLAUDE.md
-.gemini/
-GEMINI.md
-.remember/
-
 ### VS Code ###
 .vscode/
 
 ### Mac OS ###
 .DS_Store
-Icon?

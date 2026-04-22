@@ -1,4 +1,4 @@
-namespace CSharpDecompiler.Config;
+namespace CSharpAnalyzer.Config;
 
 /// <summary>Immutable configuration for a decompile run.</summary>
 /// <param name="IgnorePatterns">Type name patterns to exclude (e.g. "System.Collections.*").</param>

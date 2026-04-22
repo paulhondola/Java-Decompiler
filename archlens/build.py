@@ -12,19 +12,21 @@ def _run(cmd: list[str], cwd: Path) -> None:
 
 def java() -> None:
     """Build the Java decompiler fat JAR via Maven."""
-    _run(["mvn", "-f", str(_ROOT / "java" / "pom.xml"), "package", "-DskipTests"], cwd=_ROOT)
+    _run(
+        ["mvn", "-f", str(_ROOT / "JavaAnalyzer" / "pom.xml"), "package", "-DskipTests"], cwd=_ROOT
+    )
 
 
 def csharp() -> None:
     """Build the C# decompiler stub via dotnet."""
-    _run(["dotnet", "build", str(_ROOT / "csharp" / "CSharpDecompiler")], cwd=_ROOT)
+    _run(["dotnet", "build", str(_ROOT / "CSharpAnalyzer")], cwd=_ROOT)
 
 
 def all() -> None:
     """Build both Java and C# projects."""
     for cmd, cwd in [
-        (["mvn", "-f", str(_ROOT / "java" / "pom.xml"), "package", "-DskipTests"], _ROOT),
-        (["dotnet", "build", str(_ROOT / "csharp" / "CSharpDecompiler")], _ROOT),
+        (["mvn", "-f", str(_ROOT / "JavaAnalyzer" / "pom.xml"), "package", "-DskipTests"], _ROOT),
+        (["dotnet", "build", str(_ROOT / "CSharpAnalyzer")], _ROOT),
     ]:
         result = subprocess.run(cmd, cwd=cwd)
         if result.returncode != 0:

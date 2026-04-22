@@ -1,4 +1,4 @@
-namespace CSharpDecompiler.Model;
+namespace CSharpAnalyzer.Model;
 
 /// <summary>Immutable snapshot of a single type extracted from an assembly.</summary>
 /// <param name="Type">The reflected Type object.</param>

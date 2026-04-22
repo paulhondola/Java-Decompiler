@@ -3,17 +3,8 @@ from pathlib import Path
 
 from archlens.config import DecompileConfig
 
-
-def _find_repo_root(start: Path) -> Path:
-    """Walk upward from `start` until a directory containing pyproject.toml is found."""
-    for parent in [start, *start.parents]:
-        if (parent / "pyproject.toml").exists():
-            return parent
-    raise FileNotFoundError(f"Could not locate repo root (no pyproject.toml found above {start})")
-
-
-_REPO_ROOT = _find_repo_root(Path(__file__).resolve())
-_FAT_JAR = _REPO_ROOT / "java" / "target" / "Java-Decompiler-1.0-SNAPSHOT.jar"
+_ROOT = Path(__file__).resolve().parents[2]
+_FAT_JAR = _ROOT / "JavaAnalyzer" / "target" / "JavaAnalyzer-1.0-SNAPSHOT.jar"
 
 
 def decompile_jar(jar_path: str | Path, config: DecompileConfig) -> str:
@@ -25,7 +16,7 @@ def decompile_jar(jar_path: str | Path, config: DecompileConfig) -> str:
     """
     if not _FAT_JAR.exists():
         raise FileNotFoundError(
-            f"Fat JAR not found at {_FAT_JAR}. Run 'mvn -f java/pom.xml package' first."
+            f"Fat JAR not found at {_FAT_JAR}. Run 'mvn -f JavaAnalyzer/pom.xml package' first."
         )
 
     result = subprocess.run(

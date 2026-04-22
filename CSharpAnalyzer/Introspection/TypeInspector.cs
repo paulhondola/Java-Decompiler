@@ -1,7 +1,7 @@
-using CSharpDecompiler.Config;
-using CSharpDecompiler.Model;
+using CSharpAnalyzer.Config;
+using CSharpAnalyzer.Model;
 
-namespace CSharpDecompiler.Introspection;
+namespace CSharpAnalyzer.Introspection;
 
 /// <summary>
 /// Extracts a <see cref="TypeInfo"/> from a single <see cref="Type"/> using System.Reflection.

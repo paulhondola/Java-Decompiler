@@ -1,4 +1,4 @@
-namespace CSharpDecompiler.Model;
+namespace CSharpAnalyzer.Model;
 
 public abstract record Relationship(string TargetName)
 {

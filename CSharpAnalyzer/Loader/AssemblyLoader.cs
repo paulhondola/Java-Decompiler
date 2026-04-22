@@ -1,4 +1,4 @@
-namespace CSharpDecompiler.Loader;
+namespace CSharpAnalyzer.Loader;
 
 /// <summary>
 /// Opens a .dll assembly, loads every non-compiler-generated type it contains,

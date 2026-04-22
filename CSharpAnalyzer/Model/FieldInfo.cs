@@ -1,4 +1,4 @@
-namespace CSharpDecompiler.Model;
+namespace CSharpAnalyzer.Model;
 
 /// <summary>Represents a single field extracted from a type.</summary>
 /// <param name="Name">Field name.</param>

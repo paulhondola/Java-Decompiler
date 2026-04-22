@@ -1,6 +1,6 @@
-using CSharpDecompiler.Config;
+using CSharpAnalyzer.Config;
 
-namespace CSharpDecompiler.Filter;
+namespace CSharpAnalyzer.Filter;
 
 /// <summary>
 /// Removes types whose fully-qualified name matches any pattern in the ignore list.

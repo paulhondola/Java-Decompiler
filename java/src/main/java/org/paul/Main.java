@@ -2,9 +2,7 @@ package org.paul;
 
 import org.paul.config.DecompileConfig;
 import org.paul.filter.ClassFilter;
-import org.paul.formatter.PlantUmlFormatter;
 import org.paul.formatter.UmlFormatter;
-import org.paul.formatter.YumlFormatter;
 import org.paul.introspection.ClassInspector;
 import org.paul.loader.JarLoader;
 import picocli.CommandLine;
@@ -16,8 +14,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -29,17 +31,28 @@ import java.util.stream.Collectors;
 )
 public class Main implements Callable<Integer> {
 
-    @Option(names = "--yuml-mode", paramLabel = "MODE",
-            description = "yUML rendering mode (only with --format yuml): ${COMPLETION-CANDIDATES}. Default: ${DEFAULT-VALUE}.")
-    private YumlFormatter.Mode yumlMode = YumlFormatter.Mode.SIMPLE;
+    /**
+     * Formatter registry built once from {@link ServiceLoader}.
+     * Keys are lowercase formatter names (e.g. {@code "plantuml"}, {@code "yuml"}).
+     * To register a new formatter: implement {@link UmlFormatter} and add its fully-qualified
+     * class name to {@code META-INF/services/org.paul.formatter.UmlFormatter}.
+     */
+    static final Map<String, UmlFormatter> FORMATTERS;
+
+    static {
+        Map<String, UmlFormatter> map = new LinkedHashMap<>();
+        ServiceLoader.load(UmlFormatter.class).forEach(f -> map.put(f.name(), f));
+        FORMATTERS = Collections.unmodifiableMap(map);
+    }
+
     @Option(names = "--ignore", paramLabel = "PATTERN", split = ",",
             description = "Class name patterns to exclude, comma-separated or repeated (e.g. 'java.lang.*').")
     private List<String> ignorePatterns = List.of();
     @Parameters(index = "0", paramLabel = "JAR", description = "Path to the JAR file to analyse.")
     private String jarPath;
     @Option(names = "--format", required = true,
-            description = "Output format: ${COMPLETION-CANDIDATES}.")
-    private Format format;
+            description = "Output format. Available: plantuml, yuml (case-insensitive).")
+    private String format;
     @Option(names = "--output", paramLabel = "FILE",
             description = "Write output to FILE instead of stdout.")
     private Path outputFile;
@@ -66,12 +79,13 @@ public class Main implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() {
-        UmlFormatter formatter = switch (format) {
-            case yuml -> new YumlFormatter(yumlMode);
-            case plantuml -> new PlantUmlFormatter();
-        };
-
+    public Integer call()
+     {
+        UmlFormatter formatter = FORMATTERS.get(format.toLowerCase());
+        if (formatter == null) {
+            throw new IllegalArgumentException(
+                "Unknown formatter '" + format + "'. Available: " + FORMATTERS.keySet());
+        }
         DecompileConfig config = new DecompileConfig(ignorePatterns, false, true, true);
         String result = decompile(jarPath, formatter, config);
 
@@ -87,6 +101,4 @@ public class Main implements Callable<Integer> {
 
         return 0;
     }
-
-    enum Format {yuml, plantuml}
 }

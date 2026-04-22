@@ -9,12 +9,6 @@ import java.util.stream.Collectors;
 
 public class YumlFormatter implements UmlFormatter {
 
-    private final Mode mode;
-
-    public YumlFormatter(Mode mode) {
-        this.mode = mode;
-    }
-
     @Override
     public String format(List<ClassInfo> classes, DecompileConfig config) {
         StringBuilder sb = new StringBuilder();
@@ -22,23 +16,19 @@ public class YumlFormatter implements UmlFormatter {
         for (ClassInfo info : classes) {
             String name = config.fullyQualified() ? info.clazz().getName() : info.clazz().getSimpleName();
 
-            if (mode == Mode.SIMPLE) {
-                sb.append("[").append(name).append("]\n");
-            } else {
-                String fields = "";
-                if (config.showAttributes()) {
-                    fields = info.fields().stream()
-                            .map(f -> f.accessModifier() + " " + f.name() + ":" + f.typeName())
-                            .collect(Collectors.joining(";"));
-                }
-                String methods = "";
-                if (config.showMethods()) {
-                    methods = String.join(";", info.methods());
-                }
-                sb.append("[").append(name).append("|")
-                  .append(fields).append("|")
-                  .append(methods).append("]\n");
+            String fields = "";
+            if (config.showAttributes()) {
+                fields = info.fields().stream()
+                        .map(f -> f.accessModifier() + " " + f.name() + ":" + f.typeName())
+                        .collect(Collectors.joining(";"));
             }
+            String methods = "";
+            if (config.showMethods()) {
+                methods = String.join(";", info.methods());
+            }
+            sb.append("[").append(name).append("|")
+              .append(fields).append("|")
+              .append(methods).append("]\n");
 
             for (Relationship rel : info.relationships()) {
                 String line = switch (rel) {
@@ -57,6 +47,4 @@ public class YumlFormatter implements UmlFormatter {
 
         return sb.toString();
     }
-
-    public enum Mode { SIMPLE, CLASSES }
 }

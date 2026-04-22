@@ -11,6 +11,15 @@
         <version>3.3.0</version>
       </plugin>
       <plugin>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.4.0</version>
+        <configuration>
+          <configLocation>${project.basedir}/checkstyle.xml</configLocation>
+          <failsOnError>true</failsOnError>
+          <consoleOutput>true</consoleOutput>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.6.0</version>
         <executions>
@@ -24,6 +33,7 @@
                 <transformer>
                   <mainClass>org.paul.Main</mainClass>
                 </transformer>
+                <transformer />
               </transformers>
             </configuration>
           </execution>

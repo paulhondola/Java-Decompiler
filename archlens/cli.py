@@ -14,8 +14,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--format",
         required=True,
-        choices=["plantuml", "yuml"],
-        help="Output format.",
+        help="Output format, case-insensitive (e.g. plantuml, yuml).",
     )
     p.add_argument(
         "--ignore",
@@ -25,13 +24,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Class name pattern to exclude (repeatable).",
     )
     p.add_argument("--output", metavar="FILE", default=None, help="Write output to FILE.")
-    p.add_argument(
-        "--yuml-mode",
-        choices=["SIMPLE", "CLASSES"],
-        default="SIMPLE",
-        dest="yuml_mode",
-        help="yUML rendering mode (only with --format yuml). Default: SIMPLE.",
-    )
     return p
 
 
@@ -41,7 +33,6 @@ def main(argv: list[str] | None = None) -> None:
         format=args.format,
         ignore=args.ignore,
         output=args.output,
-        yuml_mode=args.yuml_mode,
     )
     result = route(args.input, config)
     if args.output is None:

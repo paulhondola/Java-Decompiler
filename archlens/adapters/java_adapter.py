@@ -41,8 +41,6 @@ def _build_command(jar_path: str, config: DecompileConfig) -> list[str]:
     cmd = ["java", "-jar", str(_FAT_JAR), jar_path, f"--format={config.format}"]
     for pattern in config.ignore:
         cmd += ["--ignore", pattern]
-    if config.format == "yuml":
-        cmd.append(f"--yuml-mode={config.yuml_mode}")
     if config.output:
         cmd += ["--output", config.output]
     return cmd

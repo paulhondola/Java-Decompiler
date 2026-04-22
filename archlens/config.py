@@ -1,10 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Literal
 
 
 @dataclass
 class DecompileConfig:
-    format: Literal["plantuml", "yuml"]
+    format: str  # e.g. "PlantUml", "Yuml", "Mermaid" — matches formatter class-name prefix
     ignore: list[str] = field(default_factory=list)
     output: str | None = None
-    yuml_mode: Literal["SIMPLE", "CLASSES"] = "SIMPLE"

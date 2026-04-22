@@ -19,7 +19,7 @@ public class TempSensorTest {
     @Test
     void testYuml() throws IOException {
         String expected = Files.readString(Paths.get("src/test/java/tempsensor/TempSensor.yuml"));
-        String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.CLASSES), DecompileConfig.defaults());
+        String actual = Main.decompile(JAR, new YumlFormatter(), DecompileConfig.defaults());
         assertEquals(expected, actual);
     }
 

@@ -16,16 +16,9 @@ public class EventNotifierTest {
     private static final String JAR = "src/test/java/eventnotifier/EventNotifier.jar";
 
     @Test
-    void testSimpleYuml() throws IOException {
-        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-simple.yuml"));
-        String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.SIMPLE), DecompileConfig.defaults());
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    void testClassesYuml() throws IOException {
-        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier-classes.yuml"));
-        String actual = Main.decompile(JAR, new YumlFormatter(YumlFormatter.Mode.CLASSES), DecompileConfig.defaults());
+    void testYuml() throws IOException {
+        String expected = Files.readString(Paths.get("src/test/java/eventnotifier/EventNotifier.yuml"));
+        String actual = Main.decompile(JAR, new YumlFormatter(), DecompileConfig.defaults());
         assertEquals(expected, actual);
     }
 }

@@ -32,9 +32,4 @@ internal static class Program
         );
     }
 
-    internal enum Format
-    {
-        Yuml,
-        PlantUml,
-    }
 }

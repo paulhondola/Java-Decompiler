@@ -11,14 +11,14 @@ def _run(cmd: list[str], cwd: Path) -> None:
 
 
 def java() -> None:
-    """Build the Java decompiler fat JAR via Maven."""
+    """Build the Java analyzer fat JAR via Maven."""
     _run(
         ["mvn", "-f", str(_ROOT / "JavaAnalyzer" / "pom.xml"), "package", "-DskipTests"], cwd=_ROOT
     )
 
 
 def csharp() -> None:
-    """Build the C# decompiler stub via dotnet."""
+    """Build the C# analyzer stub via dotnet."""
     _run(["dotnet", "build", str(_ROOT / "CSharpAnalyzer")], cwd=_ROOT)
 
 

@@ -6,13 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "archlens"
 version = "0.1.0"
 requires-python = ">=3.11"
-description = "Python orchestrator for Java and C# UML decompilers"
+description = "UML diagram generation from .jar and .dll files."
 
 [project.scripts]
-decompile     = "archlens.cli:main"
-build-java    = "archlens.build:java"
-build-csharp  = "archlens.build:csharp"
-build-all     = "archlens.build:all"
+archlens = "archlens.cli:main"
+archlens-build-java = "archlens.build:java"
+archlens-build-csharp = "archlens.build:csharp"
+archlens-build-all = "archlens.build:all"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.9"]

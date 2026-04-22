@@ -2,39 +2,41 @@
 
 A monorepo with a **Python CLI** that generates UML class diagrams from compiled binaries. Pass a `.jar` (Java) or `.dll` (C#) file and get PlantUML or yUML output.
 
-| Language | Input  | Status      |
-| -------- | ------ | ----------- |
-| Java     | `.jar` | Implemented |
-| C#       | `.dll` | Coming soon |
-
 ---
 
 ## Repository Structure
 
 ```text
 .
-├── pyproject.toml          # Python project root (uv + setuptools)
-├── archlens/               # Python orchestrator package
-│   ├── cli.py              # Entry point: decompile command
-│   ├── router.py           # Routes .jar → Java adapter, .dll → C# adapter
-│   ├── config.py           # DecompileConfig dataclass
-│   ├── build.py            # Entry points: build-java, build-csharp, build-all
+├── pyproject.toml              # Python project root (uv + setuptools)
+├── archlens/                   # Python orchestrator package
+│   ├── cli.py                  # Entry point: decompile command
+│   ├── router.py               # Routes .jar → Java adapter, .dll → C# adapter
+│   ├── config.py               # DecompileConfig dataclass
+│   ├── build.py                # Entry points: build-java, build-csharp, build-all
 │   └── adapters/
 │       ├── java_adapter.py     # Invokes the Java fat JAR via subprocess
-│       └── csharp_adapter.py   # Stub — raises NotImplementedError
-├── tests/                  # Python test suite (pytest)
-├── java/                   # Java decompiler (Maven + picocli)
+│       └── csharp_adapter.py   # Invokes the CSharpAnalyzer binary via subprocess
+├── tests/                      # Python test suite (pytest)
+├── JavaAnalyzer/               # Java decompiler (Maven + picocli)
 │   ├── pom.xml
 │   └── src/
-└── csharp/                 # C# decompiler stub (dotnet classlib)
-    └── CSharpDecompiler/
+├── CSharpAnalyzer/             # C# decompiler (dotnet + System.CommandLine)
+│   ├── CSharpAnalyzer.csproj
+│   ├── CSharpAnalyzer.slnx
+│   ├── CSharpAnalyzer.Tests/
+│   └── src/
+└── fixtures/
+    ├── java/                   # Java test fixtures (JAR + golden files)
+    └── csharp/                 # C# test fixtures (DLL + golden files)
+        └── TempSensor/
 ```
 
 ---
 
 ## Quick Start
 
-Requires Python 3.11+, Java 25+, Maven, and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.11+, Java 25+, Maven, .NET 10+, and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 # Install Python dependencies
@@ -43,8 +45,14 @@ uv sync
 # Build the Java fat JAR
 uv run build-java
 
-# Run
-uv run decompile MyLib.jar --format plantuml
+# Build the C# analyzer binary
+uv run build-csharp
+
+# Analyse a JAR
+uv run archlens MyLib.jar --format plantuml
+
+# Analyse a DLL
+uv run archlens MyLib.dll --format yuml
 ```
 
 ---
@@ -52,28 +60,29 @@ uv run decompile MyLib.jar --format plantuml
 ## Python CLI
 
 ```text
-Usage: decompile [-h] --format {plantuml,yuml} [--ignore PATTERN]
-                 [--output FILE] [--yuml-mode {SIMPLE,CLASSES}]
-                 FILE
+Usage: archlens [-h] --format FORMAT [--ignore PATTERN] [--output FILE] FILE
 
-  FILE                  .jar or .dll file to analyse
-  --format              Output format: plantuml, yuml  [required]
-  --ignore PATTERN      Class name pattern to exclude (repeatable)
-  --output FILE         Write output to FILE instead of stdout
-  --yuml-mode MODE      yUML rendering mode: SIMPLE, CLASSES  [default: SIMPLE]
+  FILE             .jar or .dll file to analyse
+  --format         Output format: plantuml, yuml  [required]
+  --ignore PATTERN Type name pattern to exclude (repeatable)
+  --output FILE    Write output to FILE instead of stdout
 ```
 
 ### Examples
 
 ```bash
-# PlantUML to stdout
-uv run decompile MyLib.jar --format plantuml
+# PlantUML from a JAR
+archlens MyLib.jar --format plantuml
 
-# yUML with full member details, written to a file
-uv run decompile MyLib.jar --format yuml --yuml-mode CLASSES --output diagram.yuml
+# yUML from a DLL
+archlens MyLib.dll --format yuml
 
-# Ignore packages
-uv run decompile MyLib.jar --format plantuml \
+# yUML written to a file, ignoring a namespace
+archlens MyLib.dll --format yuml --output diagram.yuml \
+  --ignore "System.*"
+
+# Multiple ignore patterns
+archlens MyLib.jar --format plantuml \
   --ignore "java.lang.*" --ignore "java.util.*"
 ```
 
@@ -82,8 +91,8 @@ uv run decompile MyLib.jar --format plantuml \
 ## Build Commands
 
 ```bash
-uv run build-java    # mvn -f java/pom.xml package -DskipTests
-uv run build-csharp  # dotnet build csharp/CSharpDecompiler
+uv run build-java    # mvn -f JavaAnalyzer/pom.xml package -DskipTests
+uv run build-csharp  # dotnet build CSharpAnalyzer/
 uv run build-all     # both in sequence, stops on first failure
 ```
 
@@ -144,44 +153,113 @@ org.paul/
 │   └── ClassFilter.java       # Applies ignore patterns before introspection
 └── formatter/
     ├── UmlFormatter.java      # Interface: format(List<ClassInfo>, config) → String
-    ├── YumlFormatter.java     # yUML output (SIMPLE / CLASSES modes)
+    ├── YumlFormatter.java     # yUML output (Classes mode)
     └── PlantUmlFormatter.java # PlantUML output
 ```
 
 ### Invoking the Java CLI Directly
 
-The fat JAR can also be used standalone:
-
 ```bash
-java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar --format plantuml
-java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar \
-  --format yuml --yuml-mode CLASSES --output diagram.yuml
-java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar MyLib.jar \
-  --format plantuml --ignore "java.lang.*,java.util.*"
+java -jar JavaAnalyzer/target/JavaAnalyzer-1.0-SNAPSHOT.jar MyLib.jar --format plantuml
+java -jar JavaAnalyzer/target/JavaAnalyzer-1.0-SNAPSHOT.jar MyLib.jar \
+  --format yuml --output diagram.yuml
+java -jar JavaAnalyzer/target/JavaAnalyzer-1.0-SNAPSHOT.jar MyLib.jar \
+  --format plantuml --ignore "java.lang.*" --ignore "java.util.*"
 ```
 
 ### Java Tests
 
 ```bash
-cd java && mvn test
+cd JavaAnalyzer && mvn test
 ```
 
-Tests cover each layer independently and validate end-to-end output against fixture files:
+---
 
-| Fixture          | Contents                                |
-| ---------------- | --------------------------------------- |
-| `tempsensor/`    | TempSensor.jar — yUML and PlantUML      |
-| `eventnotifier/` | EventNotifier.jar — yUML simple/classes |
-| `selftest/`      | Tool analysing itself                   |
+## C# Decompiler
 
-**Self-test** — regenerate the selftest fixtures:
+### How It Works
+
+The C# adapter invokes the self-contained `CSharpAnalyzer` binary, which mirrors the Java pipeline using `System.Reflection`:
+
+```text
+DLL file
+   │
+   ▼
+AssemblyLoader     load Type objects via Assembly.LoadFrom()
+   │
+   ▼
+TypeFilter         apply --ignore patterns
+   │
+   ▼
+TypeInspector      extract fields, methods, relationships via reflection
+   │
+   ▼
+IUmlFormatter      render to yUML or PlantUML string
+   │
+   ▼
+stdout / file
+```
+
+Key divergences from Java handled by the implementation:
+
+| Java behaviour                        | C# equivalent                                                  |
+| ------------------------------------- | -------------------------------------------------------------- |
+| `getInterfaces()` — direct only       | `GetInterfaces()` returns full closure; base-type diff applied |
+| `isSynthetic()` / `isBridge()`        | `IsDefined(CompilerGeneratedAttribute)` + `IsSpecialName`      |
+| `name.contains("$")` — skip nested    | `Type.IsNested`                                                |
+| Generic name `List`                   | Must strip backtick arity: `List\`1`→`List`                    |
+| Auto-property backing fields filtered | `field.Name.StartsWith('<')` guard                             |
+| `int` / `boolean` reflection names    | `Int32` / `Boolean` — exposed as-is from reflection            |
+
+### C# Package Structure
+
+```text
+CSharpAnalyzer/
+├── Program.cs                  # CLI entry point (manual arg parsing)
+├── Config/
+│   └── DecompileConfig.cs      # Immutable config record
+├── Loader/
+│   └── AssemblyLoader.cs       # Opens DLL, loads types via Assembly.LoadFrom()
+├── Model/
+│   ├── TypeInfo.cs             # Immutable snapshot of a single type
+│   ├── Relationship.cs         # Sealed record: Extends | Implements | Association | Dependency
+│   └── FieldInfo.cs            # Field name, type string, access modifier char
+├── Introspection/
+│   └── TypeInspector.cs        # Extracts TypeInfo from a Type via reflection
+├── Filter/
+│   └── TypeFilter.cs           # Applies ignore patterns before introspection
+└── Formatter/
+    ├── IUmlFormatter.cs        # Interface: Format(IReadOnlyList<TypeInfo>, config) → string
+    ├── YumlFormatter.cs        # yUML output (Classes mode)
+    └── PlantUmlFormatter.cs    # PlantUML output
+```
+
+### Invoking the C# CLI Directly
 
 ```bash
-java -jar java/target/Java-Decompiler-1.0-SNAPSHOT.jar \
-  java/target/Java-Decompiler-1.0-SNAPSHOT.jar \
-  --format plantuml \
-  --output "java/src/test/java/selftest/selftest.puml" \
-  --ignore "picocli.*"
+./CSharpAnalyzer/bin/Debug/net10.0/CSharpAnalyzer MyLib.dll --format plantuml
+./CSharpAnalyzer/bin/Debug/net10.0/CSharpAnalyzer MyLib.dll --format yuml
+./CSharpAnalyzer/bin/Debug/net10.0/CSharpAnalyzer MyLib.dll \
+  --format plantuml --ignore "System.*" --output diagram.puml
+```
+
+### C# Tests
+
+```bash
+dotnet test CSharpAnalyzer/CSharpAnalyzer.slnx
+```
+
+Tests cover each layer independently (74 tests) and validate end-to-end output against golden files:
+
+| Fixture                       | Contents                                 |
+| ----------------------------- | ---------------------------------------- |
+| `fixtures/csharp/TempSensor/` | Observer-pattern DLL — yUML and PlantUML |
+
+**Golden files** are generated on first run and committed as regression anchors. To regenerate:
+
+```bash
+rm fixtures/csharp/TempSensor/TempSensor.yuml fixtures/csharp/TempSensor/TempSensor.puml
+dotnet test CSharpAnalyzer/CSharpAnalyzer.slnx --filter "SelfTest"
 ```
 
 ---
@@ -208,31 +286,26 @@ Owner ---> Target
 @enduml
 ```
 
-### yUML — SIMPLE mode
+### yUML (Classes mode)
 
 ```text
-[ClassName]
-[Interface]^-.-[Implementor]
+[ClassName|- field:Type|+ method()]
+[Interface||Update()]
+[IBase]^-.-[Implementor]
 [Parent]^-[Child]
 [Owner]->[Target]
 ```
 
-### yUML — CLASSES mode
-
-```text
-[ClassName|- field:Type|+ method()]
-```
-
 Access modifier symbols:
 
-| Java modifier   | Symbol |
-| --------------- | ------ |
-| `private`       | `-`    |
-| `protected`     | `#`    |
-| `public`        | `+`    |
-| package-private | `~`    |
+| Modifier         | Symbol |
+| ---------------- | ------ |
+| `private`        | `-`    |
+| `protected`      | `#`    |
+| `public`         | `+`    |
+| `internal` / pkg | `~`    |
 
-Parameterized types render as `ArrayList of Observer`.
+Parameterized types render as `List of Observer`.
 
 ---
 
@@ -242,8 +315,8 @@ Parameterized types render as `ArrayList of Observer`.
 uv run pytest -v
 ```
 
-| Test file                | Coverage                                           |
-| ------------------------ | -------------------------------------------------- |
-| `test_router.py`         | Extension routing, case insensitivity              |
-| `test_java_adapter.py`   | PlantUML/yUML output, ignore patterns, missing JAR |
-| `test_csharp_adapter.py` | NotImplementedError for all configs                |
+| Test file                | Coverage                                            |
+| ------------------------ | --------------------------------------------------- |
+| `test_router.py`         | Extension routing, case insensitivity               |
+| `test_java_adapter.py`   | PlantUML/yUML output, ignore patterns, missing JAR  |
+| `test_csharp_adapter.py` | PlantUML/yUML output, ignore patterns, missing DLL. |

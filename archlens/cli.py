@@ -7,7 +7,7 @@ from archlens.router import route
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="decompile",
+        prog="archlens",
         description="Generate UML diagrams from a .jar or .dll file.",
     )
     p.add_argument("input", metavar="FILE", help=".jar or .dll file to analyse")

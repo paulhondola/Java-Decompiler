@@ -7,7 +7,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 _FAT_JAR = _ROOT / "JavaAnalyzer" / "target" / "JavaAnalyzer-1.0-SNAPSHOT.jar"
 
 
-def decompile_jar(jar_path: str | Path, config: DecompileConfig) -> str:
+def analyze_jar(jar_path: str | Path, config: DecompileConfig) -> str:
     """Invoke the fat JAR on `jar_path` and return the diagram string.
 
     Raises:

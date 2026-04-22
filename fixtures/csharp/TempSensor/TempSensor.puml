@@ -1,0 +1,56 @@
+@startuml
+
+class AverageDisplay{
+  -sum:Single
+  -count:Int32
+  Display()
+  Update()
+}
+
+class MainDriver{
+  Main()
+}
+
+class NumericDisplay{
+  -value:Int32
+  Display()
+  Update()
+}
+
+interface Observer{
+  Update()
+}
+
+interface Subject{
+  Attach()
+  Detach()
+  NotifyObservers()
+}
+
+class TemperatureSensor{
+  -observers:List of Observer
+  -tempState:Int32
+  Attach()
+  Detach()
+  GetTemp()
+  NotifyObservers()
+  SetTemp()
+}
+
+class TextDisplay{
+  -value:Int32
+  Display()
+  Update()
+}
+
+Observer <|--- AverageDisplay
+
+Observer <|--- NumericDisplay
+
+TemperatureSensor ---> Observer
+
+Subject <|--- TemperatureSensor
+
+Observer <|--- TextDisplay
+
+@enduml

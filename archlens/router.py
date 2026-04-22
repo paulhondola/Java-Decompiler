@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from archlens.adapters.csharp_adapter import decompile_dll
-from archlens.adapters.java_adapter import decompile_jar
+from archlens.adapters.csharp_adapter import analyze_dll
+from archlens.adapters.java_adapter import analyze_jar
 from archlens.config import DecompileConfig
 
 
@@ -14,8 +14,8 @@ def route(input_path: str, config: DecompileConfig) -> str:
     """
     match Path(input_path).suffix.lower():
         case ".jar":
-            return decompile_jar(input_path, config)
+            return analyze_jar(input_path, config)
         case ".dll":
-            return decompile_dll(input_path, config)
+            return analyze_dll(input_path, config)
         case s:
             raise ValueError(f"Unsupported file type '{s}'. Expected .jar or .dll.")

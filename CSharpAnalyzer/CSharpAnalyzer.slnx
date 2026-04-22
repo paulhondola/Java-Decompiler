@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="CSharpAnalyzer.csproj" />
+  <Project Path="CSharpAnalyzer.Tests/CSharpAnalyzer.Tests.csproj" />
 </Solution>
